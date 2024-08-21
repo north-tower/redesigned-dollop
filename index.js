@@ -22,7 +22,7 @@ app.post('/create-payment', async (req, res) => {
         lifeTime: req.body.lifeTime || 90,
         feePaidByPayer: req.body.feePaidByPayer || 1,
         underPaidCover: req.body.underPaidCover || 10,
-        callbackUrl: 'https://e989-102-210-221-10.ngrok-free.app/payment-callback',  // The callback URL for payment updates
+        callbackUrl: 'https://redesigned-dollop-sepia.vercel.app/payment-callback',  // The callback URL for payment updates
         description: req.body.description || 'Order #12345',
         orderId: req.body.orderId || 'ORD-12345',
         email: req.body.email || 'customer@example.com'
@@ -59,10 +59,10 @@ app.post('/payment-callback', (req, res) => {
 
     if (status === 'Paid') {
         console.log(`Payment with Track ID ${trackId} was successful.`);
-        res.redirect(`http://localhost:5173/success/${trackId}`);
+        res.redirect(`https://shiny-octo-succotash-seven.vercel.app/success/${trackId}`);
     } else {
         console.log(`Payment with Track ID ${trackId} failed.`);
-        res.redirect(`http://localhost:5173/failure/${trackId}`);
+        res.redirect(`https://shiny-octo-succotash-seven.vercel.app/failure/${trackId}`);
     }
 });
 
