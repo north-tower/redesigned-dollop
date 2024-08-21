@@ -45,6 +45,12 @@ app.post('/create-payment', async (req, res) => {
     }
 });
 
+
+// Hello World API endpoint
+app.get('/hello', (req, res) => {
+    res.send('Hello World');
+});
+
 // Callback route for payment success/failure notification
 app.post('/payment-callback', (req, res) => {
     console.log('Callback received:', req.body); // Log to verify callback
