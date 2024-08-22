@@ -17,8 +17,8 @@ app.post('/create-payment', async (req, res) => {
     const data = {
         merchant: 'sandbox',
         amount: req.body.amount || 100,
-        currency: req.body.currency || 'USD',
-        payCurrency: req.body.payCurrency || 'TRX',
+        currency: req.body.currency || 'USDT',
+        payCurrency: req.body.payCurrency || 'USDT',
         lifeTime: req.body.lifeTime || 90,
         feePaidByPayer: req.body.feePaidByPayer || 1,
         underPaidCover: req.body.underPaidCover || 10,
