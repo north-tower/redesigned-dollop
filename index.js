@@ -12,7 +12,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/create-payment', async (req, res) => {
-    const url = 'https://api.oxapay.com/merchants/request/whitelabel';
+    const url = 'https://api.oxapay.com/merchants/request';
 
     const data = {
         merchant: 'sandbox',
