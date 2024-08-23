@@ -12,10 +12,10 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/create-payment', async (req, res) => {
-    const url = 'https://api.oxapay.com/merchants/request/whitelabel';
+    const url = 'https://api.oxapay.com/merchants/request';
 
     const data = {
-        merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
+        merchant: 'sandbox',
         amount: req.body.amount || 40,
         currency: req.body.currency || 'USDT',
         payCurrency: req.body.payCurrency || 'USDT',
