@@ -37,17 +37,17 @@ app.get('/users', async (req, res) => {
     const url = 'https://api.oxapay.com/merchants/request/whitelabel';
 
     const data = {
-        merchant: 'sandbox',
-        amount: req.body.amount || 100,
-        currency: req.body.currency || 'USD',
-        payCurrency: req.body.payCurrency || 'TRX',
-        lifeTime: req.body.lifeTime || 90,
-        feePaidByPayer: req.body.feePaidByPayer || 1,
-        underPaidCover: req.body.underPaidCover || 10,
-        callbackUrl: 'https://e989-102-210-221-10.ngrok-free.app/payment-callback',  // The callback URL for payment updates
-        description: req.body.description || 'Order #12345',
-        orderId: req.body.orderId || 'ORD-12345',
-        email: req.body.email || 'customer@example.com'
+        merchant: 'XZ758T-MFVYME-N77RV9-BFT0HC',
+        amount: req.body.amount || 100,  // Get amount from request body
+        currency: req.body.currency || 'USD',  // Get currency from request body
+        payCurrency: req.body.payCurrency || 'TRX',  // Get payCurrency from request body
+        lifeTime: req.body.lifeTime || 90,  // Get lifeTime from request body
+        feePaidByPayer: req.body.feePaidByPayer || 1,  // Get feePaidByPayer from request body
+        underPaidCover: req.body.underPaidCover || 10,  // Get underPaidCover from request body
+        callbackUrl: req.body.callbackUrl || '',  // Get callbackUrl from request body
+        description: req.body.description || 'Order #12345',  // Get description from request body
+        orderId: req.body.orderId || 'ORD-12345',  // Get orderId from request body
+        email: req.body.email || 'customer@example.com'  // Get email from request body
     };
 
     try {
@@ -109,6 +109,23 @@ app.get('/users', async (req, res) => {
     }
 });
 
+
+// // Callback route for payment success/failure notification
+// app.post('/payment-callback', (req, res) => {
+//     console.log('Callback received:', req.body); // Log to verify callback
+//     const status = req.body.status; // Assume OxaPay sends payment status
+//     const trackId = req.body.trackId;
+
+//     if (status === 'Paid') {
+//         console.log(`Payment with Track ID ${trackId} was successful.`);
+//         res.redirect(`http://localhost:5173/success/${trackId}`);
+//     } else {
+//         console.log(`Payment with Track ID ${trackId} failed.`);
+//         res.redirect(`http://localhost:5173/failure/${trackId}`);
+//     }
+// });
+
+
 // Callback route for payment success/failure notification
 app.post('/payment-callback', async (req, res) => {
     const {
@@ -148,13 +165,52 @@ app.post('/payment-callback', async (req, res) => {
       if (status === 'Paid') {
         console.log(`Payment with Track ID ${trackId} was successful.`);
         res.redirect(`http://localhost:5173/success/${trackId}`);
-    } else {
+      } else {
         console.log(`Payment with Track ID ${trackId} failed.`);
         res.redirect(`http://localhost:5173/failure/${trackId}`);
+      }
+    } catch (err) {
+      console.error('Error inserting payment:', err);
+      res.status(500).send('Server error');
     }
+  });
+  
+// Endpoint to inquire about payment status
+app.post('/payment-inquiry', async (req, res) => {
+  const { merchant, trackId } = req.body;
+  
+  const url = 'https://api.oxapay.com/merchants/inquiry';
+  const data = JSON.stringify({
+    merchant: merchant, // Use the merchant API key passed from the request
+    trackId: trackId    // Use the trackId passed from the request
+  });
+
+  try {
+    // Send POST request to OxaPay API
+    const response = await axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Send the response from OxaPay back to the client
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error in payment inquiry:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
 });
 
 
+app.get('/transactions', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM payments');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
