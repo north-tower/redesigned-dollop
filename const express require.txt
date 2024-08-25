@@ -33,72 +33,32 @@ app.get('/users', async (req, res) => {
 
   
 
-  app.post('/create-payment', async (req, res) => {
-    const url = 'https://api.oxapay.com/merchants/request/whitelabel';
+
+app.post('/create-payment', async (req, res) => {
+    const url = 'https://api.oxapay.com/merchants';
 
     const data = {
         merchant: 'XZ758T-MFVYME-N77RV9-BFT0HC',
-        amount: req.body.amount || 100,  // Get amount from request body
-        currency: req.body.currency || 'USD',  // Get currency from request body
-        payCurrency: req.body.payCurrency || 'TRX',  // Get payCurrency from request body
-        lifeTime: req.body.lifeTime || 90,  // Get lifeTime from request body
-        feePaidByPayer: req.body.feePaidByPayer || 1,  // Get feePaidByPayer from request body
-        underPaidCover: req.body.underPaidCover || 10,  // Get underPaidCover from request body
-        callbackUrl: req.body.callbackUrl || '',  // Get callbackUrl from request body
-        description: req.body.description || 'Order #12345',  // Get description from request body
-        orderId: req.body.orderId || 'ORD-12345',  // Get orderId from request body
-        email: req.body.email || 'customer@example.com'  // Get email from request body
+        amount: req.body.amount || 100,
+        currency: req.body.currency || 'USD',
+        payCurrency: req.body.payCurrency || 'TRX',
+        lifeTime: req.body.lifeTime || 90,
+        feePaidByPayer: req.body.feePaidByPayer || 1,
+        underPaidCover: req.body.underPaidCover || 10,
+        callbackUrl: '',  // The callback URL for payment updates
+        description: req.body.description || 'Order #12345',
+        orderId: req.body.orderId || 'ORD-12345',
+        email: req.body.email || 'customer@example.com'
     };
 
     try {
-        // Send payment request to the external API
         const response = await axios.post(url, data, {
             headers: {
                 'Content-Type': 'application/json'
             }
         });
-
-        console.log('Payment request response:', response.data); 
-
-        // Destructure necessary data from the response
-        const {
-          message,
-          trackId,
-          amount,
-          currency,
-          email,
-          orderId,
-          date,
-          payDate,
-          type,
-          address,
-          price,
-          payAmount,
-          receivedAmount,
-          payCurrency,
-          network,
-          QRCode,
-          rate
-        } = response.data;
-
-        // Try inserting payment details into the database
-        try {
-          const paymentResult = await pool.query(
-            `INSERT INTO payments (paymentid, userid, merchantid, amount, currency, paymentgateway, paymentstatus) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
-            RETURNING *`,
-            [
-              trackId, '12', '12', payAmount, payCurrency, address, message
-            ]
-          );
-      
-          // Send the response back to the front-end with the payment details
-          res.json(response.data);
-
-        } catch (err) {
-          console.error('Error inserting payment:', err);
-          res.status(500).send('Server error');
-        }
+        console.log('Payment request response:', response.data); // Log response data
+        res.json(response.data);
     } catch (error) {
         console.error('Error occurred:', error.message, error.response ? error.response.data : '');
         res.status(500).json({
@@ -108,7 +68,6 @@ app.get('/users', async (req, res) => {
         });
     }
 });
-
 
 // // Callback route for payment success/failure notification
 // app.post('/payment-callback', (req, res) => {
