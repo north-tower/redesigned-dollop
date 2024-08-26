@@ -31,6 +31,16 @@ app.get('/users', async (req, res) => {
     }
   });
 
+app.get('/categories', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM categories');
+      res.json(result.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Server error');
+    }
+  });
+
   
 
   app.post('/create-payment', async (req, res) => {
