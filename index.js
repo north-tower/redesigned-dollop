@@ -31,6 +31,16 @@ app.get('/users', async (req, res) => {
     }
   });
 
+app.get('/categories', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM categories');
+      res.json(result.rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Server error');
+    }
+  });
+
   
 
   app.post('/create-payment', async (req, res) => {
@@ -201,7 +211,28 @@ app.post('/payment-inquiry', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
+// Endpoint to inquire about payment status
+app.post('/category', async (req, res) => {
+  const { name, description } = req.body;
+  
+ console.log('Category received:', req.body); // Log to verify callback
+  try {
+    // Send POST request to OxaPay API
+    const paymentResult = await pool.query(
+        `INSERT INTO categories (name, description) 
+        VALUES ($1, $2) 
+        RETURNING *`,
+        [
+           name, description
+        ]
+      );
+    // Send the response from OxaPay back to the client
+    res.status(200).json(paymentResult.data);
+  } catch (error) {
+    console.error('Error in payment inquiry:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 app.get('/transactions', async (req, res) => {
   try {
