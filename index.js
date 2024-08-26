@@ -208,7 +208,7 @@ app.post('/category', async (req, res) => {
   try {
     // Send POST request to OxaPay API
     const paymentResult = await pool.query(
-        `INSERT INTO category (name, description) 
+        `INSERT INTO categories (name, description) 
         VALUES ($1, $2) 
         RETURNING *`,
         [
