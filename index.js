@@ -216,7 +216,7 @@ app.post('/category', async (req, res) => {
         ]
       );
     // Send the response from OxaPay back to the client
-    res.status(200).json(response.data);
+    res.status(200).json(paymentResult.data);
   } catch (error) {
     console.error('Error in payment inquiry:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
