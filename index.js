@@ -37,17 +37,17 @@ app.get('/users', async (req, res) => {
     const url = 'https://api.oxapay.com/merchants/request/whitelabel';
 
     const data = {
-        merchant: 'XZ758T-MFVYME-N77RV9-BFT0HC',
-        amount: req.body.amount || 100,  // Get amount from request body
-        currency: req.body.currency || 'USD',  // Get currency from request body
-        payCurrency: req.body.payCurrency || 'TRX',  // Get payCurrency from request body
-        lifeTime: req.body.lifeTime || 90,  // Get lifeTime from request body
-        feePaidByPayer: req.body.feePaidByPayer || 1,  // Get feePaidByPayer from request body
-        underPaidCover: req.body.underPaidCover || 10,  // Get underPaidCover from request body
-        callbackUrl: req.body.callbackUrl || '',  // Get callbackUrl from request body
-        description: req.body.description || 'Order #12345',  // Get description from request body
-        orderId: req.body.orderId || 'ORD-12345',  // Get orderId from request body
-        email: req.body.email || 'customer@example.com'  // Get email from request body
+        merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
+        amount: req.body.amount || 100,  
+        currency: req.body.currency || 'USD',  
+        payCurrency: req.body.payCurrency || 'TRX',  
+        lifeTime: req.body.lifeTime || 90,  
+        feePaidByPayer: req.body.feePaidByPayer || 1,  
+        underPaidCover: req.body.underPaidCover || 10,  
+        callbackUrl: req.body.callbackUrl || '',  
+        description: req.body.description || 'Order #12345',  
+        orderId: req.body.orderId || 'ORD-12345',  
+        email: req.body.email || 'customer@example.com'  
     };
 
     try {
@@ -84,11 +84,11 @@ app.get('/users', async (req, res) => {
         // Try inserting payment details into the database
         try {
           const paymentResult = await pool.query(
-            `INSERT INTO payments (paymentid, userid, merchantid, amount, currency, paymentgateway, paymentstatus) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7) 
+            `INSERT INTO payments (paymentid, userid, merchantid, amount, currency, paymentgateway, paymentstatus, "user") 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
             RETURNING *`,
             [
-              trackId, '12', '12', payAmount, payCurrency, address, message
+              trackId, '12', '12', payAmount, payCurrency, address, message, email
             ]
           );
       
@@ -108,6 +108,7 @@ app.get('/users', async (req, res) => {
         });
     }
 });
+
 
 
 // // Callback route for payment success/failure notification
@@ -210,7 +211,45 @@ app.get('/transactions', async (req, res) => {
     console.error(err);
     res.status(500).send('Server error');
   }
-});
+});// Callback route for payment success/failure notification
+app.post('/grants', async (req, res) => {
+    const {
+      GrantorID,
+      GranteeID,
+      Privilege
+    } = req.body;
+  
+    console.log('Callback received:', req.body); // Log to verify callback
+  
+    try {
+      // Insert payment details into the database
+      const grants = await pool.query(
+        `INSERT INTO grants (grantorid, granteeid, privilege) 
+        VALUES ($1, $2, $3) 
+        RETURNING *`,
+        [
+           GrantorID,GranteeID, Privilege
+        ]
+      );
+  
+     
+    } catch (err) {
+      console.error('Error inserting payment:', err);
+      res.status(500).send('Server error');
+    }
+  });
+
+
+  app.get('/grants', async (req, res) => {
+   
+    try {
+      const result = await pool.query('SELECT * FROM grants');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+  });
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
