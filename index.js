@@ -215,21 +215,20 @@ app.post('/payment-inquiry', async (req, res) => {
 app.post('/category', async (req, res) => {
   const { name, description } = req.body;
   
- console.log('Category received:', req.body); // Log to verify callback
+  console.log('Category received:', req.body); // Log to verify callback
+  
   try {
-    // Send POST request to OxaPay API
     const paymentResult = await pool.query(
-        `INSERT INTO categories (name, description) 
-        VALUES ($1, $2) 
-        RETURNING *`,
-        [
-           name, description
-        ]
-      );
-    // Send the response from OxaPay back to the client
-    res.status(200).json(paymentResult.data);
+      `INSERT INTO categories (name, description) 
+       VALUES ($1, $2) 
+       RETURNING *`,
+      [name, description]
+    );
+
+    // Send the inserted category back to the client
+    res.status(200).json(paymentResult.rows[0]);
   } catch (error) {
-    console.error('Error in payment inquiry:', error);
+    console.error('Error in inserting category:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
