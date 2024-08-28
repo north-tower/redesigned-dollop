@@ -4,11 +4,12 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-
+const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 
 dotenv.config();
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -16,6 +17,15 @@ const pool = new Pool({
       rejectUnauthorized: false
     }
   });
+  
+  // Supabase setup
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  
+  // Configure Multer for file upload handling
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -212,23 +222,43 @@ app.post('/payment-inquiry', async (req, res) => {
   }
 });
 // Endpoint to inquire about payment status
-app.post('/category', async (req, res) => {
+app.post('/category', upload.single('photo'), async (req, res) => {
   const { name, description } = req.body;
-  
-  console.log('Category received:', req.body); // Log to verify callback
+  const { file } = req;
   
   try {
+    // Upload the photo to Supabase storage
+    let photoUrl = null;
+    if (file) {
+      const { data, error: uploadError } = await supabase
+        .storage
+        .from('categories') // Supabase storage bucket name
+        .upload(`photos/${Date.now()}_${file.originalname}`, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+
+      console.log(data)
+
+      photoUrl = supabase.storage.from('categories').getPublicUrl(data.path);
+      console.log(photoUrl)
+    }
+
+    // Insert the category details into the database
     const paymentResult = await pool.query(
-      `INSERT INTO categories (name, description) 
-       VALUES ($1, $2) 
+      `INSERT INTO categories (name, description, photo_url) 
+       VALUES ($1, $2, $3) 
        RETURNING *`,
-      [name, description]
+      [name, description, photoUrl]
     );
 
-    // Send the inserted category back to the client
     res.status(200).json(paymentResult.rows[0]);
   } catch (error) {
-    console.error('Error in inserting category:', error);
+    console.error('Error creating category:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
