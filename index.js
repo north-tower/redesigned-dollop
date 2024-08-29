@@ -300,6 +300,22 @@ app.post('/grants', async (req, res) => {
   });
 
 
+// Endpoint to insert a new journal entry
+app.post('/referals', async (req, res) => {
+  const { userId, referalcode1, referalcode2 } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO referals (userid, referalcode1, referalcode2) VALUES ($1, $2, $3) RETURNING *',
+      [ userid, referalcode1, referalcode2]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+
   app.get('/grants', async (req, res) => {
    
     try {
