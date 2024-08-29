@@ -320,7 +320,7 @@ app.post('/referals2', async (req, res) => {
   const { userId, referalcode } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO referals (userid, referalcode) VALUES ($1, $2) RETURNING *',
+      'INSERT INTO referals2 (userid, referalcode) VALUES ($1, $2) RETURNING *',
       [ userid, referalcode ]
     );
     res.status(201).json(result.rows[0]);
