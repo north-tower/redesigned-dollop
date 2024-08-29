@@ -57,7 +57,7 @@ app.get('/categories', async (req, res) => {
     const url = 'https://api.oxapay.com/merchants/request/whitelabel';
 
     const data = {
-        merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
+        merchant: 'sandbox',
         amount: req.body.amount || 100,  
         currency: req.body.currency || 'USD',  
         payCurrency: req.body.payCurrency || 'TRX',  
