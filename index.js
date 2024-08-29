@@ -314,6 +314,21 @@ app.post('/referals', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+// Endpoint to insert a new journal entry
+app.post('/referals2', async (req, res) => {
+  const { userId, referalcode } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO referals (userid, referalcode) VALUES ($1, $2) RETURNING *',
+      [ userid, referalcode ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 // Endpoint to check if referral code is unique
 app.get('/check-referral-code/:code', async (req, res) => {
   const { code } = req.params;
