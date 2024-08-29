@@ -314,6 +314,18 @@ app.post('/referals', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+// Endpoint to check if referral code is unique
+app.get('/check-referral-code/:code', async (req, res) => {
+  const { code } = req.params;
+  try {
+    const result = await pool.query('SELECT COUNT(*) FROM referals WHERE referalcode1 = $1', [code]);
+    const exists = result.rows[0].count > 0;
+    res.json({ exists });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 
 
   app.get('/grants', async (req, res) => {
