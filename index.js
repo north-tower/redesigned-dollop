@@ -291,7 +291,7 @@ app.post('/grants', async (req, res) => {
            GrantorID,GranteeID, Privilege
         ]
       );
-  
+   res.status(200).json(grants.rows[0]);
      
     } catch (err) {
       console.error('Error inserting payment:', err);
