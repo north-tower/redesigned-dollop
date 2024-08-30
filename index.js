@@ -58,9 +58,10 @@ app.post('/create-payment', async (req, res) => {
   const { amount, currency, payCurrency, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
 
   const data = JSON.stringify({
-    merchant: 'sandbox',
+    merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
     amount,
-    currency: payCurrency,
+    currency,
+    payCurrency,
     lifeTime,
     feePaidByPayer,
     underPaidCover,
@@ -71,7 +72,7 @@ app.post('/create-payment', async (req, res) => {
     email
   });
 
-  const url = 'https://api.oxapay.com/merchants/request';
+  const url = 'https://api.oxapay.com/merchants/request/whitelabel';
 
   try {
     const response = await axios.post(url, data, {
@@ -80,8 +81,10 @@ app.post('/create-payment', async (req, res) => {
       }
     });
 
-    const { trackId, payLink } = response.data;
-    res.json({ trackId, payLink });
+    console.log(response.data)
+
+    const { trackId, address, expiredAt ,lifeTime } = response.data;
+    res.json({ trackId, address, expiredAt , lifeTime});
   } catch (error) {
     console.error(error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to create payment' });
