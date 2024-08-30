@@ -9,7 +9,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 dotenv.config();
 const app = express();
-const PORT = 3001;
+const PORT = 3000;
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
@@ -53,80 +53,39 @@ app.get('/categories', async (req, res) => {
 
   
 
-  app.post('/create-payment', async (req, res) => {
-    const url = 'https://api.oxapay.com/merchants/request/whitelabel';
+// Route to handle payment creation
+app.post('/create-payment', async (req, res) => {
+  const { amount, currency, payCurrency, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
 
-    const data = {
-        merchant: 'sandbox',
-        amount: req.body.amount || 100,  
-        currency: req.body.currency || 'USD',  
-        payCurrency: req.body.payCurrency || 'TRX',  
-        lifeTime: req.body.lifeTime || 90,  
-        feePaidByPayer: req.body.feePaidByPayer || 1,  
-        underPaidCover: req.body.underPaidCover || 10,  
-        callbackUrl: req.body.callbackUrl || '',  
-        description: req.body.description || 'Order #12345',  
-        orderId: req.body.orderId || 'ORD-12345',  
-        email: req.body.email || 'customer@example.com'  
-    };
+  const data = JSON.stringify({
+    merchant: 'sandbox',
+    amount,
+    currency: payCurrency,
+    lifeTime,
+    feePaidByPayer,
+    underPaidCover,
+    callbackUrl,
+    returnUrl,
+    description,
+    orderId,
+    email
+  });
 
-    try {
-        // Send payment request to the external API
-        const response = await axios.post(url, data, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+  const url = 'https://api.oxapay.com/merchants/request';
 
-        console.log('Payment request response:', response.data); 
+  try {
+    const response = await axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-        // Destructure necessary data from the response
-        const {
-          message,
-          trackId,
-          amount,
-          currency,
-          email,
-          orderId,
-          date,
-          payDate,
-          type,
-          address,
-          price,
-          payAmount,
-          receivedAmount,
-          payCurrency,
-          network,
-          QRCode,
-          rate
-        } = response.data;
-
-        // Try inserting payment details into the database
-        try {
-          const paymentResult = await pool.query(
-            `INSERT INTO payments (paymentid, userid, merchantid, amount, currency, paymentgateway, paymentstatus, "user") 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-            RETURNING *`,
-            [
-              trackId, '12', '12', payAmount, payCurrency, address, message, email
-            ]
-          );
-      
-          // Send the response back to the front-end with the payment details
-          res.json(response.data);
-
-        } catch (err) {
-          console.error('Error inserting payment:', err);
-          res.status(500).send('Server error');
-        }
-    } catch (error) {
-        console.error('Error occurred:', error.message, error.response ? error.response.data : '');
-        res.status(500).json({
-            error: 'Something went wrong',
-            details: error.message,
-            response: error.response ? error.response.data : 'No response data'
-        });
-    }
+    const { trackId, payLink } = response.data;
+    res.json({ trackId, payLink });
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to create payment' });
+  }
 });
 
 
@@ -147,55 +106,69 @@ app.get('/categories', async (req, res) => {
 // });
 
 
+
+// Utility function to generate a unique referral code
+function generateReferralCode(length = 8) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let referralCode = '';
+  for (let i = 0; i < length; i++) {
+      referralCode += charset.charAt(Math.floor(Math.random() * charset.length));
+  }
+  return referralCode;
+}
+
 // Callback route for payment success/failure notification
 app.post('/payment-callback', async (req, res) => {
-    const {
-      status,
-      trackId,
-      amount,
-      currency,
-      email,
-      orderId,
-      description,
-      date,
-      payDate,
-      type,
-      txID,
-      price,
-      payAmount,
-      receivedAmount,
-      payCurrency,
-      network,
-      rate
-    } = req.body;
-  
-    console.log('Callback received:', req.body); // Log to verify callback
-  
-    try {
-      // Insert payment details into the database
-      const paymentResult = await pool.query(
-        `INSERT INTO payments (paymentid, userid, merchantid, amount, currency, paymentgateway, paymentstatus) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7) 
-        RETURNING *`,
-        [
-           trackId,'12', '12', payAmount, payCurrency, txID, status
-        ]
-      );
-  
-      // Redirect to success or failure page based on status
-      if (status === 'Paid') {
-        console.log(`Payment with Track ID ${trackId} was successful.`);
-        res.redirect(`http://localhost:5173/success/${trackId}`);
-      } else {
-        console.log(`Payment with Track ID ${trackId} failed.`);
-        res.redirect(`http://localhost:5173/failure/${trackId}`);
+  console.log('Callback received:', req.body);
+
+  const { status, trackId, amount, currency, txID, payCurrency, receivedAmount, email } = req.body;
+
+  if (!status || !trackId) {
+      console.error('Invalid callback data received');
+      return res.status(400).send('Bad Request: Missing status or trackId');
+  }
+
+  if (status === 'Paid') {
+      try {
+          // Check if the user already has a referral code
+          const referralResult = await pool.query(
+              'SELECT referral_code FROM deposits WHERE email = $1 LIMIT 1',
+              [email]
+          );
+
+          let referralCode;
+          if (referralResult.rows.length > 0) {
+              // Use the existing referral code
+              referralCode = referralResult.rows[0].referral_code;
+              console.log(`User already has a referral code: ${referralCode}`);
+          } else {
+              // Generate a new referral code if none exists
+              referralCode = generateReferralCode();
+              console.log(`Generated new referral code: ${referralCode}`);
+          }
+
+          // Insert the payment details into the database, regardless of referral code status
+          await pool.query(
+              `INSERT INTO deposits (track_id, amount, received_amount, transaction_id, referral_code, email) 
+               VALUES ($1, $2, $3, $4, $5, $6) 
+               RETURNING *`,
+              [
+                  trackId, amount, receivedAmount, txID, referralCode, email
+              ]
+          );
+
+          // Send the referral code to the frontend (along with success redirect)
+          res.redirect(`http://localhost:5173/success/${trackId}?referralCode=${referralCode}`);
+      } catch (err) {
+          console.error('Error handling payment callback:', err);
+          res.status(500).send('Server error');
       }
-    } catch (err) {
-      console.error('Error inserting payment:', err);
-      res.status(500).send('Server error');
-    }
-  });
-  
+  } else {
+      console.log(`Payment with Track ID ${trackId} failed.`);
+      res.redirect(`http://localhost:5173/failure/${trackId}`);
+  }
+});
+
 // Endpoint to inquire about payment status
 app.post('/payment-inquiry', async (req, res) => {
   const { merchant, trackId } = req.body;
@@ -265,13 +238,63 @@ app.post('/category', upload.single('photo'), async (req, res) => {
 
 app.get('/transactions', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM payments');
+    const result = await pool.query('SELECT * FROM deposits');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).send('Server error');
   }
-});// Callback route for payment success/failure notification
+});
+
+app.get('/rewards', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM rewards');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+
+
+// server.js - Referral Logic API
+app.post('/check-referrals', async (req, res) => {
+  const { userId, referal } = req.body;
+
+  try {
+    // Get the latest deposit timestamp for this user
+    const latestDepositResult = await pool.query(
+      `SELECT MAX(created_at) AS latest_deposit FROM rewards WHERE userid = $1 AND amount = 10 AND currency = 'USDT'`,
+      [userId]
+    );
+    const latestDepositTimestamp = latestDepositResult.rows[0]?.latest_deposit || null;
+
+    const referralCountResult = await pool.query(
+      `SELECT COUNT(*) FROM referals WHERE referalcode2 = $1 AND referaltimestamp > COALESCE($2::timestamp, '1970-01-01T00:00:00Z'::timestamp)`,
+      [referal, latestDepositTimestamp]
+    );
+    
+    const referralCount = parseInt(referralCountResult.rows[0].count, 10);
+
+    // If the user has 4 or more new referrals, reward them
+    if (referralCount >= 4) {
+      // Add 10 USDT to deposits table
+      await pool.query(
+        `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
+        [userId, 10, 'USDT']
+      );
+
+      res.json({ message: 'Reward granted', rewardAdded: true });
+    } else {
+      res.json({ message: `You have ${referralCount} new referrals`, rewardAdded: false });
+    }
+  } catch (err) {
+    console.error('Error checking referrals:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.post('/grants', async (req, res) => {
     const {
       GrantorID,
@@ -302,7 +325,7 @@ app.post('/grants', async (req, res) => {
 
 // Endpoint to insert a new journal entry
 app.post('/referals', async (req, res) => {
-  const { userId, referalcode1, referalcode2 } = req.body;
+  const { userid, referalcode1, referalcode2 } = req.body;
   try {
     const result = await pool.query(
       'INSERT INTO referals (userid, referalcode1, referalcode2) VALUES ($1, $2, $3) RETURNING *',
@@ -314,6 +337,28 @@ app.post('/referals', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+// Endpoint to get referer's code by userId
+app.get('/get-referer-code', async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    const result = await pool.query(
+      'SELECT referalcode2 FROM referals WHERE userid = $1 LIMIT 1',
+      [userId]
+    );
+
+    if (result.rows.length > 0) {
+      res.json({ refererCode: result.rows[0].referalcode2 });
+    } else {
+      res.status(404).json({ message: 'Referer code not found' });
+    }
+  } catch (err) {
+    console.error('Error fetching referer code:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 // Endpoint to insert a new journal entry
 app.post('/referals2', async (req, res) => {
@@ -329,18 +374,28 @@ app.post('/referals2', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-// Endpoint to check if referral code is unique
-app.get('/check-referral-code/:code', async (req, res) => {
-  const { code } = req.params;
+// Route to get referral code by email
+app.get('/get-referral-code', async (req, res) => {
+  const { email } = req.query;
+
   try {
-    const result = await pool.query('SELECT COUNT(*) FROM referals WHERE referalcode1 = $1', [code]);
-    const exists = result.rows[0].count > 0;
-    res.json({ exists });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    // Fetch referral code from the deposits table
+    const referralResult = await pool.query(
+      'SELECT referral_code FROM deposits WHERE email = $1 LIMIT 1',
+      [email]
+    );
+
+    if (referralResult.rows.length > 0) {
+      res.json({ referralCode: referralResult.rows[0].referral_code });
+    } else {
+      res.status(404).json({ message: 'Referral code not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching referral code:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
   app.get('/grants', async (req, res) => {
