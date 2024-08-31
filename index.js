@@ -58,7 +58,7 @@ app.post('/create-payment', async (req, res) => {
   const { amount, currency, payCurrency, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
 
   const data = JSON.stringify({
-    merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
+    merchant: 'LHUG6C-MZHDH5-R7L1ST-YWK9S1',
     amount,
     currency,
     payCurrency,
