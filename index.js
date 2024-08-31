@@ -54,8 +54,14 @@ app.get('/categories', async (req, res) => {
   
 
 // Route to handle payment creation
+
+
 app.post('/create-payment', async (req, res) => {
-  const { amount, currency, payCurrency, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
+  const { amount, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
+
+  // Override currency and payCurrency to TRX
+  const currency = 'TRX';
+  const payCurrency = 'TRX';
 
   const data = JSON.stringify({
     merchant: 'LHUG6C-MZHDH5-R7L1ST-YWK9S1',
@@ -81,15 +87,16 @@ app.post('/create-payment', async (req, res) => {
       }
     });
 
-    console.log(response.data)
+    console.log(response.data);
 
-    const { trackId, address, expiredAt ,lifeTime } = response.data;
-    res.json({ trackId, address, expiredAt , lifeTime});
+    const { trackId, address, expiredAt, lifeTime } = response.data;
+    res.json({ trackId, address, expiredAt, lifeTime });
   } catch (error) {
     console.error(error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to create payment' });
   }
 });
+
 
 
 
