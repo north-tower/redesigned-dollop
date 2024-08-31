@@ -64,7 +64,7 @@ app.post('/create-payment', async (req, res) => {
   const payCurrency = 'TRX';
 
   const data = JSON.stringify({
-    merchant: 'sandbox',
+    merchant: 'LHUG6C-MZHDH5-R7L1ST-YWK9S1'
     amount,
     currency,
     payCurrency,
@@ -89,8 +89,8 @@ app.post('/create-payment', async (req, res) => {
 
     console.log(response.data);
 
-    const { trackId, payLink, expiredAt, lifeTime } = response.data;
-    res.json({ trackId, payLink, expiredAt, lifeTime });
+    const { trackId, address, expiredAt, lifeTime } = response.data;
+    res.json({ trackId, address, expiredAt, lifeTime });
   } catch (error) {
     console.error(error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to create payment' });
