@@ -76,7 +76,7 @@ app.post('/create-payment', async (req, res) => {
     description,
     orderId,
     email,
-    network: 'TRC-20'
+    network: 'TRC20'
   });
 
   const url = 'https://api.oxapay.com/merchants/request/whitelabel';
