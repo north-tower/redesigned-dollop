@@ -64,7 +64,7 @@ app.post('/create-payment', async (req, res) => {
   const payCurrency = 'USDT';
 
   const data = JSON.stringify({
-    merchant: 'YCZB67-Z2VNDT-M5F1A4-MKVZC3',
+    merchant: '3RRD1M-KL8UP1-39WP15-CMX7X3',
     amount,
     currency,
     payCurrency,
