@@ -60,11 +60,11 @@ app.post('/create-payment', async (req, res) => {
   const { amount, lifeTime, feePaidByPayer, underPaidCover, callbackUrl, returnUrl, description, orderId, email } = req.body;
 
   // Override currency and payCurrency to TRX
-  const currency = 'TRX';
-  const payCurrency = 'TRX';
+  const currency = 'USDT';
+  const payCurrency = 'USDT';
 
   const data = JSON.stringify({
-    merchant: 'LHUG6C-MZHDH5-R7L1ST-YWK9S1',
+    merchant: 'YCZB67-Z2VNDT-M5F1A4-MKVZC3',
     amount,
     currency,
     payCurrency,
