@@ -78,7 +78,7 @@ app.post('/create-payment', async (req, res) => {
     email
   });
 
-  const url = 'https://api.oxapay.com/merchants/request';
+  const url = 'https://api.oxapay.com/merchants/request/whitelabel';
 
   try {
     const response = await axios.post(url, data, {
