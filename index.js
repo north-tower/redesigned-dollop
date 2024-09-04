@@ -276,7 +276,7 @@ app.post('/check-referrals', async (req, res) => {
   try {
     // Get the latest deposit timestamp for this user
     const latestDepositResult = await pool.query(
-      `SELECT MAX(created_at) AS latest_deposit FROM rewards WHERE userid = $1 AND amount = 10 AND currency = 'USDT'`,
+      `SELECT MAX(created_at) AS latest_deposit FROM rewards WHERE userid = $1 AND amount = 40 AND currency = 'USDT'`,
       [userId]
     );
     const latestDepositTimestamp = latestDepositResult.rows[0]?.latest_deposit || null;
@@ -289,11 +289,11 @@ app.post('/check-referrals', async (req, res) => {
     const referralCount = parseInt(referralCountResult.rows[0].count, 10);
 
     // If the user has 4 or more new referrals, reward them
-    if (referralCount >= 4) {
+    if (referralCount >= 5) {
       // Add 10 USDT to deposits table
       await pool.query(
         `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
-        [userId, 10, 'USDT']
+        [userId, 40, 'USDT']
       );
 
       res.json({ message: 'Reward granted', rewardAdded: true });
