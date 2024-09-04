@@ -308,7 +308,9 @@ app.post('/check-referrals', async (req, res) => {
 
       res.json({ message: 'Reward granted', rewardAdded: true });
     } else {
-      res.json({ message: `You have ${referralCount} new referrals`, rewardAdded: false });
+        $requiredReferrals= 5;
+      res.json({ message: `You have ${referralCount} new referrals! Keep going — you're just ${requiredReferrals - referralCount} referrals away from earning your reward.
+`, rewardAdded: false });
     }
   } catch (err) {
     console.error('Error checking referrals:', err);
