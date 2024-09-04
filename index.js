@@ -257,6 +257,16 @@ app.get('/transactions', async (req, res) => {
   }
 });
 
+app.get('/referals', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM referals');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 app.get('/rewards', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM rewards');
