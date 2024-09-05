@@ -299,11 +299,11 @@ app.post('/check-referrals', async (req, res) => {
     const referralCount = parseInt(referralCountResult.rows[0].count, 10);
 
     // If the user has 4 or more new referrals, reward them
-    if (referralCount >= 5) {
+    if (referralCount >= 1) {
       // Add 10 USDT to deposits table
       await pool.query(
         `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
-        [userId, 40, 'USDT']
+        [userId, 10, 'USDT']
       );
 
       res.json({ message: 'Reward granted', rewardAdded: true });
