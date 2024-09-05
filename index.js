@@ -283,6 +283,22 @@ app.post('/check-referrals', async (req, res) => {
   const { userId, referal } = req.body;
 
   try {
+    // Check if a reward has already been issued for this user and referral code
+    const rewardCheckResult = await pool.query(
+      `SELECT COUNT(*) FROM rewards WHERE userid = $1 AND referalcode2 = $2`,
+      [userId, referal]
+    );
+
+    const rewardExists = parseInt(rewardCheckResult.rows[0].count, 10) > 0;
+
+    if (!rewardExists) {
+      // No previous reward for this referral, so we award 10 USDT
+      await pool.query(
+        `INSERT INTO rewards (userid, amount, currency, referalcode2) VALUES ($1, $2, $3, $4)`,
+        [userId, 10, 'USDT', referal]
+      );
+    }
+
     // Get the latest deposit timestamp for this user
     const latestDepositResult = await pool.query(
       `SELECT MAX(created_at) AS latest_deposit FROM rewards WHERE userid = $1 AND amount = 40 AND currency = 'USDT'`,
@@ -298,28 +314,28 @@ app.post('/check-referrals', async (req, res) => {
     
     const referralCount = parseInt(referralCountResult.rows[0].count, 10);
 
-    // Always reward the user with 10 USDT for each referral
-    await pool.query(
-      `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
-      [userId, 10, 'USDT']
-    );
-
     // Send a response with the referral count and progress message
     const requiredReferrals = 5;
     const referralsLeft = requiredReferrals - referralCount;
 
-    // If the user still hasn't reached the threshold, provide progress feedback
+    // Construct message based on referral progress
     const message = referralsLeft > 0
       ? `You have ${referralCount} new referrals! Keep going — you're just ${referralsLeft} referrals away from earning your 40 USDT reward.`
       : 'Congratulations! You have reached 5 or more referrals and earned your 40 USDT reward!';
 
-    res.json({ message: `10 USDT reward granted. ${message}`, rewardAdded: true });
+    res.json({ 
+      message: rewardExists 
+        ? `You have already been rewarded for this referral. ${message}` 
+        : `10 USDT reward granted. ${message}`, 
+      rewardAdded: !rewardExists 
+    });
 
   } catch (err) {
     console.error('Error checking referrals:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 app.post('/grants', async (req, res) => {
