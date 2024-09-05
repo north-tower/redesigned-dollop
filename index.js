@@ -291,6 +291,7 @@ app.post('/check-referrals', async (req, res) => {
     );
     const latestDepositTimestamp = latestDepositResult.rows[0]?.latest_deposit || null;
 
+    // Count referrals since the last reward
     const referralCountResult = await pool.query(
       `SELECT COUNT(*) FROM referals WHERE referalcode2 = $1 AND referaltimestamp > COALESCE($2::timestamp, '1970-01-01T00:00:00Z'::timestamp)`,
       [referal, latestDepositTimestamp]
@@ -298,20 +299,23 @@ app.post('/check-referrals', async (req, res) => {
     
     const referralCount = parseInt(referralCountResult.rows[0].count, 10);
 
-    // If the user has 4 or more new referrals, reward them
-    if (referralCount >= 5) {
-      // Add 10 USDT to deposits table
-      await pool.query(
-        `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
-        [userId, 10, 'USDT']
-      );
+    // Always reward the user with 10 USDT for each referral
+    await pool.query(
+      `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
+      [userId, 10, 'USDT']
+    );
 
-      res.json({ message: 'Reward granted', rewardAdded: true });
-    } else {
-        const requiredReferrals= 5;
-      res.json({ message: `You have ${referralCount} new referrals! Keep going — you're just ${requiredReferrals - referralCount} referrals away from earning your reward.
-`, rewardAdded: false });
-    }
+    // Send a response with the referral count and progress message
+    const requiredReferrals = 5;
+    const referralsLeft = requiredReferrals - referralCount;
+
+    // If the user still hasn't reached the threshold, provide progress feedback
+    const message = referralsLeft > 0
+      ? `You have ${referralCount} new referrals! Keep going — you're just ${referralsLeft} referrals away from earning your 40 USDT reward.`
+      : 'Congratulations! You have reached 5 or more referrals and earned your 40 USDT reward!';
+
+    res.json({ message: `10 USDT reward granted. ${message}`, rewardAdded: true });
+
   } catch (err) {
     console.error('Error checking referrals:', err);
     res.status(500).json({ message: 'Server error' });
