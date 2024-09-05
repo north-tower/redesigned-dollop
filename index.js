@@ -269,7 +269,7 @@ app.get('/referals', async (req, res) => {
 
 app.get('/rewards', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM rewards');
+    const result = await pool.query('SELECT * FROM referals');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
