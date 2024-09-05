@@ -279,20 +279,44 @@ app.get('/rewards', async (req, res) => {
 
 
 
-// server.js - Referral Logic API
 app.post('/check-referrals', async (req, res) => {
   const { userId, referal } = req.body;
 
   try {
-    // Always reward 10 USDT for every valid referral
+    // Get the latest deposit timestamp for this user
+    const latestDepositResult = await pool.query(
+      `SELECT MAX(created_at) AS latest_deposit FROM rewards WHERE userid = $1 AND amount = 40 AND currency = 'USDT'`,
+      [userId]
+    );
+    const latestDepositTimestamp = latestDepositResult.rows[0]?.latest_deposit || null;
+
+    // Count referrals since the last reward
+    const referralCountResult = await pool.query(
+      `SELECT COUNT(*) FROM referals WHERE referalcode2 = $1 AND referaltimestamp > COALESCE($2::timestamp, '1970-01-01T00:00:00Z'::timestamp)`,
+      [referal, latestDepositTimestamp]
+    );
+    
+    const referralCount = parseInt(referralCountResult.rows[0].count, 10);
+
+    // Always reward the user with 10 USDT for each referral
     await pool.query(
       `INSERT INTO rewards (userid, amount, currency) VALUES ($1, $2, $3)`,
       [userId, 10, 'USDT']
     );
 
-    res.json({ message: '10 USDT reward granted', rewardAdded: true });
+    // Send a response with the referral count and progress message
+    const requiredReferrals = 5;
+    const referralsLeft = requiredReferrals - referralCount;
+
+    // If the user still hasn't reached the threshold, provide progress feedback
+    const message = referralsLeft > 0
+      ? `You have ${referralCount} new referrals! Keep going — you're just ${referralsLeft} referrals away from earning your 40 USDT reward.`
+      : 'Congratulations! You have reached 5 or more referrals and earned your 40 USDT reward!';
+
+    res.json({ message: `10 USDT reward granted. ${message}`, rewardAdded: true });
+
   } catch (err) {
-    console.error('Error processing referral:', err);
+    console.error('Error checking referrals:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
