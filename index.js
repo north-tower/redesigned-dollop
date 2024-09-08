@@ -180,15 +180,14 @@ app.post('/payment-callback', async (req, res) => {
   }
 });
 
-// Endpoint to inquire about payment status
-app.post('/payment-inquiry', async (req, res) => {
-    const merchant = 'TYCR7F-TME38N-CA4Y6A-6GCMA7';
-  const {  trackId } = req.body;
+app.post('/payment-inquiry/:trackId', async (req, res) => {
+  const merchant = 'TYCR7F-TME38N-CA4Y6A-6GCMA7';
+  const { trackId } = req.params; // Get trackId from the URL params
   
   const url = 'https://api.oxapay.com/merchants/inquiry';
   const data = JSON.stringify({
-    merchant: merchant, // Use the merchant API key passed from the request
-    trackId: trackId    // Use the trackId passed from the request
+    merchant: merchant, // Use the merchant API key
+    trackId: trackId    // Use the trackId from the URL params
   });
 
   try {
