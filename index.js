@@ -64,7 +64,7 @@ app.post('/create-payment', async (req, res) => {
   const payCurrency = 'USDT';
 
   const data = JSON.stringify({
-    merchant: 'TYCR7F-TME38N-CA4Y6A-6GCMA7',
+    merchant: 'sandbox',
     amount,
     currency,
     payCurrency,
@@ -79,7 +79,7 @@ app.post('/create-payment', async (req, res) => {
     network: 'TRC20'
   });
 
-  const url = 'https://api.oxapay.com/merchants/request/whitelabel';
+  const url = 'https://api.oxapay.com/merchants/request';
 
   try {
     const response = await axios.post(url, data, {
