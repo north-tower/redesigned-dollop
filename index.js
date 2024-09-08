@@ -182,7 +182,8 @@ app.post('/payment-callback', async (req, res) => {
 
 // Endpoint to inquire about payment status
 app.post('/payment-inquiry', async (req, res) => {
-  const { merchant, trackId } = req.body;
+    const merchant = 'TYCR7F-TME38N-CA4Y6A-6GCMA7';
+  const {  trackId } = req.body;
   
   const url = 'https://api.oxapay.com/merchants/inquiry';
   const data = JSON.stringify({
