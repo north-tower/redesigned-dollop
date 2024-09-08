@@ -365,6 +365,29 @@ app.post('/grants', async (req, res) => {
     }
   });
 
+// Express.js API endpoint
+app.post('/payouts', async (req, res) => {
+  const { UserId, amount, address } = req.body;
+
+  console.log('Payout received:', req.body);
+
+  try {
+    // Insert payment details into the database
+    const payouts = await pool.query(
+      `INSERT INTO payouts (userid, amount, address) 
+       VALUES ($1, $2, $3) 
+       RETURNING *`,
+      [UserId, amount, address]
+    );
+
+    res.status(200).json(payouts.rows[0]); // Corrected the response object name to 'payouts'
+  } catch (err) {
+    console.error('Error inserting payment:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+
 
 // Endpoint to insert a new journal entry
 app.post('/referals', async (req, res) => {
