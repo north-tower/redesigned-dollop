@@ -181,7 +181,7 @@ app.post('/payment-callback', async (req, res) => {
 });
 
 app.post('/payment-inquiry/:trackId', async (req, res) => {
-  const merchant = 'TYCR7F-TME38N-CA4Y6A-6GCMA7';
+  const merchant = 'sandbox';
   const { trackId } = req.params; // Get trackId from the URL params
   
   const url = 'https://api.oxapay.com/merchants/inquiry';
@@ -472,6 +472,7 @@ app.get('/get-referral-code', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 
 
