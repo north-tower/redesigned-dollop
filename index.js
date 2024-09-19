@@ -377,17 +377,17 @@ app.post('/grants', async (req, res) => {
 
 // Express.js API endpoint
 app.post('/payouts', async (req, res) => {
-  const { UserId, amount, address } = req.body;
+  const { UserId, amount, address, type } = req.body;
 
   console.log('Payout received:', req.body);
 
   try {
     // Insert payment details into the database
     const payouts = await pool.query(
-      `INSERT INTO payouts (userid, amount, address) 
-       VALUES ($1, $2, $3) 
+      `INSERT INTO payouts (userid, amount, address, type) 
+       VALUES ($1, $2, $3, $4) 
        RETURNING *`,
-      [UserId, amount, address]
+      [UserId, amount, address, type]
     );
 
     res.status(200).json(payouts.rows[0]); // Corrected the response object name to 'payouts'
@@ -402,7 +402,7 @@ app.post('/payouts', async (req, res) => {
 // Endpoint to insert a new journal entry
 app.post('/referals', async (req, res) => {
   const { userid, referalcode1, referalcode2 } = req.body;
-    const amount = 10;
+    const amount = 4;
   try {
     const result = await pool.query(
       'INSERT INTO referals (userid, referalcode1, referalcode2, amount) VALUES ($1, $2, $3, $4) RETURNING *',
