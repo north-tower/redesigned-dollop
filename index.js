@@ -415,6 +415,22 @@ app.post('/referals', async (req, res) => {
   }
 });
 
+// Endpoint to insert a new journal entry
+app.post('/verified', async (req, res) => {
+  const { userid  } = req.body;
+    const amount = 4;
+  try {
+    const result = await pool.query(
+      'INSERT INTO verified (userid ) VALUES ($1 ) RETURNING *',
+      [ userid ]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Endpoint to get referer's code by userId
 app.get('/get-referer-code', async (req, res) => {
   const { userId } = req.query;
