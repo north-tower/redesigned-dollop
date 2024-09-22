@@ -618,7 +618,7 @@ app.put('/payouts/:id', async (req, res) => {
 app.get('/grants/total-per-user', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT grantorid, SUM(privilege) AS total_grants, grantid
+      SELECT grantorid, SUM(privilege) AS total_grants
       FROM grants
       GROUP BY grantorid
     `);
@@ -627,6 +627,8 @@ app.get('/grants/total-per-user', async (req, res) => {
     console.error(err);
     res.status(500).send('Server error');
   }
+});
+
 });
 
 
