@@ -632,7 +632,7 @@ app.get('/grants/referral-count', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT userid, referalcode1 AS referal_code, COUNT(*) AS referral_count
-      FROM grants
+      FROM referals
       WHERE referalcode2 IS NOT NULL
       GROUP BY userid, referalcode1
     `);
