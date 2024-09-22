@@ -395,7 +395,19 @@ app.post('/payouts', async (req, res) => {
     console.error('Error inserting payment:', err);
     res.status(500).send('Server error');
   }
+    
 });
+
+app.get('/transactions2', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT SUM(received_amount) AS total_received FROM deposits');
+    res.json(result.rows[0]); // Access the first row for total_received
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 
 
