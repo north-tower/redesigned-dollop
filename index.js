@@ -528,6 +528,15 @@ app.get('/get-referral-code', async (req, res) => {
   }
   });
 
+ app.get('/grants2', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT SUM(privilege) AS total FROM grants');
+    res.json(result.rows[0]); // Access the first row for total_received
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 
 
 // Start the server
