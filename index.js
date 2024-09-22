@@ -548,6 +548,25 @@ app.get('/get-referral-code', async (req, res) => {
   }
 });
 
+// Add a DELETE route to handle transaction deletion
+app.delete('/transactions/:id', async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Delete the transaction by id
+    const result = await pool.query('DELETE FROM deposits WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    res.json({ message: 'Transaction deleted successfully', deletedTransaction: result.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // Start the server
 app.listen(PORT, () => {
