@@ -568,6 +568,36 @@ app.delete('/transactions/:id', async (req, res) => {
 });
 
 
+app.put('/payouts/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body; // Expecting the new status from the request body
+
+  if (!status) {
+    return res.status(400).json({ message: 'Status is required' });
+  }
+
+  try {
+    // Update the status of the payout in the database
+    const result = await pool.query(
+      'UPDATE payouts SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Payout not found' });
+    }
+
+    res.status(200).json({
+      message: 'Payout status updated successfully',
+      payout: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error updating payout status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
