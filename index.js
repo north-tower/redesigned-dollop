@@ -618,7 +618,7 @@ app.put('/payouts/:id', async (req, res) => {
 app.get('/grants/total-per-user', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT grantorid, SUM(privilege) AS total_grants
+      SELECT grantorid, SUM(privilege) AS total_grants, grantid
       FROM grants
       GROUP BY grantorid
     `);
