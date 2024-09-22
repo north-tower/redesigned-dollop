@@ -502,6 +502,22 @@ app.get('/get-referral-code', async (req, res) => {
     res.status(500).send('Server error');
   }
   });
+
+
+
+  app.get('/verified', async (req, res) => {
+   
+    try {
+      const result = await pool.query('SELECT * FROM verified');
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+  });
+
+
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
