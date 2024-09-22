@@ -629,7 +629,7 @@ app.get('/grants/total-per-user', async (req, res) => {
   }
 });
 
-});
+
 
 
 
