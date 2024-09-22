@@ -628,6 +628,21 @@ app.get('/grants/total-per-user', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+app.get('/grants/referral-count', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT referalcode1 AS referal_code, COUNT(*) AS referral_count
+      FROM referals
+      WHERE referalcode2 IS NOT NULL
+      GROUP BY referalcode1
+    `);
+
+    res.json(result.rows); // Returns an array of referral counts for each user
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
 
 
 
