@@ -399,26 +399,34 @@ app.post('/payouts', async (req, res) => {
 });
 
 app.post('/users', async (req, res) => {
-  const { uid,email,display_name,photo_url,provider_id } = req.body;
+  const { uid, email, display_name, photo_url, provider_id } = req.body;
 
   console.log('User received:', req.body);
 
   try {
-    // Insert payment details into the databasee
+    // Check if the email already exists
+    const emailCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+
+    // If email exists, skip the insert and return a message
+    if (emailCheck.rows.length > 0) {
+      return res.status(200).json({ message: 'User with this email already exists', user: emailCheck.rows[0] });
+    }
+
+    // If email is unique, insert user details into the database
     const users = await pool.query(
-      `INSERT INTO users (uid, email, display_name, photo_url, provider_id )
-       VALUES ($1, $2, $3, $4, $5) 
+      `INSERT INTO users (uid, email, display_name, photo_url, provider_id)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [uid, email, display_name, photo_url, provider_id]
     );
 
-    res.status(200).json(users.rows[0]); // Corrected the response object name to 'payouts'
+    res.status(200).json(users.rows[0]);
   } catch (err) {
-    console.error('Error inserting payment:', err);
+    console.error('Error inserting user:', err);
     res.status(500).send('Server error');
   }
-    
 });
+
 
 app.get('/transactions2', async (req, res) => {
   try {
