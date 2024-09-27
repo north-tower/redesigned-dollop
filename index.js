@@ -406,7 +406,7 @@ app.post('/users', async (req, res) => {
   try {
     // Insert payment details into the databasee
     const users = await pool.query(
-      `INSERT INTO users (uid, email, display_name, photo_url, provider_id 
+      `INSERT INTO users (uid, email, display_name, photo_url, provider_id )
        VALUES ($1, $2, $3, $4, $5) 
        RETURNING *`,
       [uid, email, display_name, photo_url, provider_id]
