@@ -398,6 +398,28 @@ app.post('/payouts', async (req, res) => {
     
 });
 
+app.post('/users', async (req, res) => {
+  const { uid,email,display_name,photo_url,provider_id } = req.body;
+
+  console.log('User received:', req.body);
+
+  try {
+    // Insert payment details into the databasee
+    const users = await pool.query(
+      `INSERT INTO users (uid, email, display_name, photo_url, provider_id 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING *`,
+      [uid, email, display_name, photo_url, provider_id]
+    );
+
+    res.status(200).json(users.rows[0]); // Corrected the response object name to 'payouts'
+  } catch (err) {
+    console.error('Error inserting payment:', err);
+    res.status(500).send('Server error');
+  }
+    
+});
+
 app.get('/transactions2', async (req, res) => {
   try {
     const result = await pool.query('SELECT SUM(received_amount) AS total_received FROM deposits');
