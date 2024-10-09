@@ -35,13 +35,13 @@ async function updateImageTimestamps() {
     // 1. Fetch image URLs from the table
     const { data: images, error } = await supabase
       .from('categories')
-      .select('id, photo_url');
+      .select('categoryid, photo_url');
 
     if (error) throw new Error(`Error fetching images: ${error.message}`);
 
     // Iterate over each image URL
     for (const image of images) {
-      const { id, image_url } = image;
+      const { categoryid, image_url } = image;
 
       // 2. Retrieve the file metadata from storage
       const filePath = image_url.replace(`https://tjeougsaxfuznmquezon.supabase.co/storage/v1/object/public/categories/`, '');
@@ -65,12 +65,12 @@ async function updateImageTimestamps() {
         const { error: updateError } = await supabase
           .from('categories')
           .update({ created_at: timestamp })
-          .eq('id', id);
+          .eq('categoryid', categoryid);
 
         if (updateError) {
-          console.error(`Error updating timestamp for image id ${id}:`, updateError);
+          console.error(`Error updating timestamp for image id ${categoryid}:`, updateError);
         } else {
-          console.log(`Updated timestamp for image id ${id}: ${timestamp}`);
+          console.log(`Updated timestamp for image id ${categoryid}: ${timestamp}`);
         }
       }
     }
