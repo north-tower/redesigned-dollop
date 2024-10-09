@@ -30,6 +30,66 @@ const upload = multer({ storage });
 app.use(cors());
 app.use(bodyParser.json());
 
+async function updateImageTimestamps() {
+  try {
+    // 1. Fetch image URLs from the table
+    const { data: images, error } = await supabase
+      .from('categories')
+      .select('id, photo_url');
+
+    if (error) throw new Error(`Error fetching images: ${error.message}`);
+
+    // Iterate over each image URL
+    for (const image of images) {
+      const { id, image_url } = image;
+
+      // 2. Retrieve the file metadata from storage
+      const filePath = image_url.replace(`https://tjeougsaxfuznmquezon.supabase.co/storage/v1/object/public/categories/`, '');
+
+      const { data: metadata, error: storageError } = await supabase
+        .storage
+        .from('categories')
+        .list('', {
+          search: filePath
+        });
+
+      if (storageError) {
+        console.error(`Error fetching metadata for image ${id}:`, storageError);
+        continue;
+      }
+
+      const timestamp = metadata[0]?.created_at;
+
+      if (timestamp) {
+        // 3. Update the table with the timestamp
+        const { error: updateError } = await supabase
+          .from('categories')
+          .update({ created_at: timestamp })
+          .eq('id', id);
+
+        if (updateError) {
+          console.error(`Error updating timestamp for image id ${id}:`, updateError);
+        } else {
+          console.log(`Updated timestamp for image id ${id}: ${timestamp}`);
+        }
+      }
+    }
+
+    return { success: true, message: 'Timestamps updated successfully' };
+  } catch (err) {
+    console.error(err);
+    return { success: false, message: err.message };
+  }
+}
+// New endpoint to trigger timestamp update
+app.get('/update-image-timestamps', async (req, res) => {
+  const result = await updateImageTimestamps();
+  if (result.success) {
+    res.status(200).send(result.message);
+  } else {
+    res.status(500).send(result.message);
+  }
+});
 
 app.get('/users', async (req, res) => {
     try {
