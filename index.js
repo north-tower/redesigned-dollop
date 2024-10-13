@@ -445,6 +445,33 @@ app.post('/grants', async (req, res) => {
     }
   });
 
+app.post('/leave', async (req, res) => {
+    const {
+     nature, start, finish , description
+    } = req.body;
+
+    const approval = "Pending"
+  
+    console.log('Callback received:', req.body); // Log to verify callback
+  
+    try {
+      // Insert payment details into the database
+      const grants = await pool.query(
+        `INSERT INTO leave (nature, start, finish, approval , description) 
+        VALUES ($1, $2, $3, $4, $5) 
+        RETURNING *`,
+        [
+           nature, start, finish, approval , description
+        ]
+      );
+   res.status(200).json(grants.rows[0]);
+     
+    } catch (err) {
+      console.error('Error inserting payment:', err);
+      res.status(500).send('Server error');
+    }
+  });
+
 
 
 // Express.js API endpoint
