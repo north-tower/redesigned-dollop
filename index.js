@@ -337,6 +337,31 @@ app.get('/referals', async (req, res) => {
   }
 });
 
+app.get('/present', async (req, res) => {
+  try {
+    // Count the number of entries where attendance = 'p'
+    const result = await pool.query("SELECT COUNT(*) AS present FROM attendance WHERE attendance = 'p'");
+    
+    res.json(result.rows[0]); // Return the count as 'present'
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+ app.get('/absent', async (req, res) => {
+  try {
+    // Count the number of entries where attendance = 'p'
+    const result = await pool.query("SELECT COUNT(*) AS absent FROM attendance WHERE attendance = 'a'");
+    
+    res.json(result.rows[0]); // Return the count as 'present'
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+
+
 app.get('/payouts', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM payouts');
